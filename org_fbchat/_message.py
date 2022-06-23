@@ -62,9 +62,11 @@ class Message(object):
     """Represents a Facebook message."""
 
     #: The actual message
-    text = attr.ib(False, init=True)
+    text = attr.ib(None)
+    #: A list of :class:`Mention` objects
+    mentions = attr.ib(factory=list, converter=lambda x: [] if x is None else x)
     #: A :class:`EmojiSize`. Size of a sent emoji
-    emoji_size = attr.ib(False, init=False)
+    emoji_size = attr.ib(None)
     #: The message ID
     uid = attr.ib(None, init=False)
     #: ID of the sender
@@ -78,21 +80,19 @@ class Message(object):
     #: A dictionary with user's IDs as keys, and their :class:`MessageReaction` as values
     reactions = attr.ib(factory=dict, init=False)
     #: A :class:`Sticker`
-    sticker = attr.ib(False, init=False)
-    #: Whether the message is unsent (deleted for everyone)
-    unsent = attr.ib(False, init=False)
-    #: Message ID you want to reply to
-    reply_to_id = attr.ib(False, init=False)
-    #: Replied message
-    replied_to = attr.ib(None, init=False)
-    #: Whether the message was forwarded
-    forwarded = attr.ib(False, init=False)
-    #: A list of :class:`Mention` objects
-    mentions = attr.ib(factory=list, converter=lambda x: [] if x is None else x)
+    sticker = attr.ib(None)
     #: A list of attachments
     attachments = attr.ib(factory=list, converter=lambda x: [] if x is None else x)
     #: A list of :class:`QuickReply`
     quick_replies = attr.ib(factory=list, converter=lambda x: [] if x is None else x)
+    #: Whether the message is unsent (deleted for everyone)
+    unsent = attr.ib(False, init=False)
+    #: Message ID you want to reply to
+    reply_to_id = attr.ib(None)
+    #: Replied message
+    replied_to = attr.ib(None, init=False)
+    #: Whether the message was forwarded
+    forwarded = attr.ib(False, init=False)
 
     @classmethod
     def formatMentions(cls, text, *args, **kwargs):

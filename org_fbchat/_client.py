@@ -1,8 +1,6 @@
 # -*- coding: UTF-8 -*-
 from __future__ import unicode_literals
 
-import os
-
 import requests
 import urllib
 from uuid import uuid1
@@ -22,6 +20,7 @@ try:
     from urllib.parse import urlparse, parse_qs
 except ImportError:
     from urlparse import urlparse, parse_qs
+
 
 ACONTEXT = {
     "action_history": [
@@ -66,13 +65,13 @@ class Client(object):
         return self._uid
 
     def __init__(
-            self,
-            email,
-            password,
-            user_agent=None,
-            max_tries=5,
-            session_cookies=None,
-            logging_level=logging.INFO,
+        self,
+        email,
+        password,
+        user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36",
+        max_tries=5,
+        session_cookies=None,
+        logging_level=logging.INFO,
     ):
         """Initialize and log in the client.
 
@@ -97,9 +96,9 @@ class Client(object):
 
         # If session cookies aren't set, not properly loaded or gives us an invalid session, then do the login
         if (
-                not session_cookies
-                or not self.setSession(session_cookies, user_agent=user_agent)
-                or not self.isLoggedIn()
+            not session_cookies
+            or not self.setSession(session_cookies, user_agent=user_agent)
+            or not self.isLoggedIn()
         ):
             self.login(email, password, max_tries, user_agent=user_agent)
 
@@ -169,7 +168,7 @@ class Client(object):
             session_cookies (dict): A dictionary containing session cookies
 
         Returns:
-            bool: False if ``session_cookies.txt`` does not contain proper cookies
+            bool: False if ``session_cookies`` does not contain proper cookies
         """
         try:
             # Load cookies into current session
@@ -313,7 +312,9 @@ class Client(object):
                 before=last_thread_timestamp, thread_location=thread_location
             )
 
-            if len(candidates) > 1:
+            if last_thread_timestamp == None and len(candidates) >= 1:
+                threads += candidates
+            elif len(candidates) > 1:
                 threads += candidates[1:]
             else:  # End of threads
                 break
@@ -322,7 +323,7 @@ class Client(object):
 
             # FB returns a sorted list of threads
             if (before is not None and int(last_thread_timestamp) > before) or (
-                    after is not None and int(last_thread_timestamp) < after
+                after is not None and int(last_thread_timestamp) < after
             ):
                 break
 
@@ -331,7 +332,7 @@ class Client(object):
             for t in threads:
                 last_message_timestamp = int(t.last_message_timestamp)
                 if (before is not None and last_message_timestamp > before) or (
-                        after is not None and last_message_timestamp < after
+                    after is not None and last_message_timestamp < after
                 ):
                     threads.remove(t)
 
@@ -361,8 +362,8 @@ class Client(object):
             elif thread.type == ThreadType.GROUP:
                 for user_id in thread.participants:
                     if (
-                            user_id not in [user.uid for user in users]
-                            and user_id not in users_to_fetch
+                        user_id not in [user.uid for user in users]
+                        and user_id not in users_to_fetch
                     ):
                         users_to_fetch.append(user_id)
         for user_id, user in self.fetchUserInfo(*users_to_fetch).items():
@@ -787,7 +788,7 @@ class Client(object):
         return messages
 
     def fetchThreadList(
-            self, offset=None, limit=20, thread_location=ThreadLocation.INBOX, before=None
+        self, offset=None, limit=20, thread_location=ThreadLocation.INBOX, before=None
     ):
         """Fetch the client's thread list.
 
@@ -1002,7 +1003,7 @@ class Client(object):
                 i = j[thread_id]["message_shared_media"]["edges"][0]
             except IndexError:
                 if j[thread_id]["message_shared_media"]["page_info"].get(
-                        "has_next_page"
+                    "has_next_page"
                 ):
                     data["after"] = j[thread_id]["message_shared_media"][
                         "page_info"
@@ -1068,11 +1069,11 @@ class Client(object):
         )
 
     def sendEmoji(
-            self,
-            emoji=None,
-            size=EmojiSize.SMALL,
-            thread_id=None,
-            thread_type=ThreadType.USER,
+        self,
+        emoji=None,
+        size=EmojiSize.SMALL,
+        thread_id=None,
+        thread_type=ThreadType.USER,
     ):
         """Deprecated. Use :func:`fbchat.Client.send` instead."""
         return self.send(
@@ -1158,7 +1159,7 @@ class Client(object):
         j = self._payload_post("/messaging/unsend_message/?dpr=1", data)
 
     def _sendLocation(
-            self, location, current=True, message=None, thread_id=None, thread_type=None
+        self, location, current=True, message=None, thread_id=None, thread_type=None
     ):
         thread_id, thread_type = self._getThread(thread_id, thread_type)
         thread = thread_type._to_class()(thread_id)
@@ -1195,7 +1196,7 @@ class Client(object):
         )
 
     def sendPinnedLocation(
-            self, location, message=None, thread_id=None, thread_type=None
+        self, location, message=None, thread_id=None, thread_type=None
     ):
         """Send a given location to a thread as a pinned location.
 
@@ -1223,7 +1224,7 @@ class Client(object):
         return self._state._upload(files, voice_clip=voice_clip)
 
     def _sendFiles(
-            self, files, message=None, thread_id=None, thread_type=ThreadType.USER
+        self, files, message=None, thread_id=None, thread_type=ThreadType.USER
     ):
         """Send files from file IDs to a thread.
 
@@ -1242,7 +1243,7 @@ class Client(object):
         return self._doSendRequest(data)
 
     def sendRemoteFiles(
-            self, file_urls, message=None, thread_id=None, thread_type=ThreadType.USER
+        self, file_urls, message=None, thread_id=None, thread_type=ThreadType.USER
     ):
         """Send files from URLs to a thread.
 
@@ -1265,7 +1266,7 @@ class Client(object):
         )
 
     def sendLocalFiles(
-            self, file_paths, message=None, thread_id=None, thread_type=ThreadType.USER, delete=False
+        self, file_paths, message=None, thread_id=None, thread_type=ThreadType.USER
     ):
         """Send local files to a thread.
 
@@ -1284,14 +1285,12 @@ class Client(object):
         file_paths = require_list(file_paths)
         with get_files_from_paths(file_paths) as x:
             files = self._upload(x)
-        # if delete:
-        #     os.remove(file_paths)
         return self._sendFiles(
             files=files, message=message, thread_id=thread_id, thread_type=thread_type
         )
 
     def sendRemoteVoiceClips(
-            self, clip_urls, message=None, thread_id=None, thread_type=ThreadType.USER
+        self, clip_urls, message=None, thread_id=None, thread_type=ThreadType.USER
     ):
         """Send voice clips from URLs to a thread.
 
@@ -1314,7 +1313,7 @@ class Client(object):
         )
 
     def sendLocalVoiceClips(
-            self, clip_paths, message=None, thread_id=None, thread_type=ThreadType.USER, delete=False
+        self, clip_paths, message=None, thread_id=None, thread_type=ThreadType.USER
     ):
         """Send local voice clips to a thread.
 
@@ -1333,19 +1332,17 @@ class Client(object):
         clip_paths = require_list(clip_paths)
         with get_files_from_paths(clip_paths) as x:
             files = self._upload(x, voice_clip=True)
-        # if delete:
-        #     os.remove(clip_paths)
         return self._sendFiles(
             files=files, message=message, thread_id=thread_id, thread_type=thread_type
         )
 
     def sendImage(
-            self,
-            image_id,
-            message=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            is_gif=False,
+        self,
+        image_id,
+        message=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        is_gif=False,
     ):
         """Deprecated."""
         if is_gif:
@@ -1360,7 +1357,7 @@ class Client(object):
         )
 
     def sendRemoteImage(
-            self, image_url, message=None, thread_id=None, thread_type=ThreadType.USER
+        self, image_url, message=None, thread_id=None, thread_type=ThreadType.USER
     ):
         """Deprecated. Use :func:`fbchat.Client.sendRemoteFiles` instead."""
         return self.sendRemoteFiles(
@@ -1371,7 +1368,7 @@ class Client(object):
         )
 
     def sendLocalImage(
-            self, image_path, message=None, thread_id=None, thread_type=ThreadType.USER
+        self, image_path, message=None, thread_id=None, thread_type=ThreadType.USER
     ):
         """Deprecated. Use :func:`fbchat.Client.sendLocalFiles` instead."""
         return self.sendLocalFiles(
@@ -1639,7 +1636,7 @@ class Client(object):
         j = self._payload_post("/messaging/set_thread_name/?dpr=1", data)
 
     def changeNickname(
-            self, nickname, user_id, thread_id=None, thread_type=ThreadType.USER
+        self, nickname, user_id, thread_id=None, thread_type=ThreadType.USER
     ):
         """Change the nickname of a user in a thread.
 
@@ -1719,7 +1716,7 @@ class Client(object):
             "client_mutation_id": "1",
             "actor_id": self._uid,
             "message_id": str(message_id),
-            "reaction": reaction.value if reaction else None,
+            "reaction": reaction if reaction else None
         }
         data = {"doc_id": 1491398900900362, "variables": json.dumps({"data": data})}
         j = self._payload_post("/webgraphql/mutation", data)
@@ -2619,14 +2616,18 @@ class Client(object):
                     thread_id, thread_type = getThreadIdAndThreadType(i)
                     mid = i["messageId"]
                     author_id = str(i["userId"])
-                    reaction = (
-                        MessageReaction(i["reaction"]) if i.get("reaction") else None
-                    )
+                    
+                    # Commented as the statement below invalidates other reaction emoji
+                    
+                    # reaction = (reaction = (
+                    #     MessageReaction(i["reaction"]) if i.get("reaction") else None
+                    # )
+                    
                     add_reaction = not bool(i["action"])
                     if add_reaction:
                         self.onReactionAdded(
                             mid=mid,
-                            reaction=reaction,
+                            reaction=i.get("reaction"),
                             author_id=author_id,
                             thread_id=thread_id,
                             thread_type=thread_type,
@@ -2946,16 +2947,16 @@ class Client(object):
         return True
 
     def onMessage(
-            self,
-            mid=None,
-            author_id=None,
-            message=None,
-            message_object=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        message=None,
+        message_object=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody sends a message.
 
@@ -2973,7 +2974,7 @@ class Client(object):
         log.info("{} from {} in {}".format(message_object, thread_id, thread_type.name))
 
     def onPendingMessage(
-            self, thread_id=None, thread_type=None, metadata=None, msg=None
+        self, thread_id=None, thread_type=None, metadata=None, msg=None
     ):
         """Called when the client is listening, and somebody that isn't
          connected with you on either Facebook or Messenger sends a message.
@@ -2988,15 +2989,15 @@ class Client(object):
         log.info("New pending message from {}".format(thread_id))
 
     def onColorChange(
-            self,
-            mid=None,
-            author_id=None,
-            new_color=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        new_color=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody changes a thread's color.
 
@@ -3017,15 +3018,15 @@ class Client(object):
         )
 
     def onEmojiChange(
-            self,
-            mid=None,
-            author_id=None,
-            new_emoji=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        new_emoji=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody changes a thread's emoji.
 
@@ -3046,15 +3047,15 @@ class Client(object):
         )
 
     def onTitleChange(
-            self,
-            mid=None,
-            author_id=None,
-            new_title=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        new_title=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody changes a thread's title.
 
@@ -3075,14 +3076,14 @@ class Client(object):
         )
 
     def onImageChange(
-            self,
-            mid=None,
-            author_id=None,
-            new_image=None,
-            thread_id=None,
-            thread_type=ThreadType.GROUP,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        new_image=None,
+        thread_id=None,
+        thread_type=ThreadType.GROUP,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody changes a thread's image.
 
@@ -3098,16 +3099,16 @@ class Client(object):
         log.info("{} changed thread image in {}".format(author_id, thread_id))
 
     def onNicknameChange(
-            self,
-            mid=None,
-            author_id=None,
-            changed_for=None,
-            new_nickname=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        changed_for=None,
+        new_nickname=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody changes a nickname.
 
@@ -3129,14 +3130,14 @@ class Client(object):
         )
 
     def onAdminAdded(
-            self,
-            mid=None,
-            added_id=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=ThreadType.GROUP,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        added_id=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=ThreadType.GROUP,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody adds an admin to a group.
 
@@ -3151,14 +3152,14 @@ class Client(object):
         log.info("{} added admin: {} in {}".format(author_id, added_id, thread_id))
 
     def onAdminRemoved(
-            self,
-            mid=None,
-            removed_id=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=ThreadType.GROUP,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        removed_id=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=ThreadType.GROUP,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody is removed as an admin in a group.
 
@@ -3173,14 +3174,14 @@ class Client(object):
         log.info("{} removed admin: {} in {}".format(author_id, removed_id, thread_id))
 
     def onApprovalModeChange(
-            self,
-            mid=None,
-            approval_mode=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=ThreadType.GROUP,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        approval_mode=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=ThreadType.GROUP,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody changes approval mode in a group.
 
@@ -3198,14 +3199,14 @@ class Client(object):
             log.info("{} disabled approval mode in {}".format(author_id, thread_id))
 
     def onMessageSeen(
-            self,
-            seen_by=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            seen_ts=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        seen_by=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        seen_ts=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody marks a message as seen.
 
@@ -3225,14 +3226,14 @@ class Client(object):
         )
 
     def onMessageDelivered(
-            self,
-            msg_ids=None,
-            delivered_for=None,
-            thread_id=None,
-            thread_type=ThreadType.USER,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        msg_ids=None,
+        delivered_for=None,
+        thread_id=None,
+        thread_type=ThreadType.USER,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody marks messages as delivered.
 
@@ -3252,7 +3253,7 @@ class Client(object):
         )
 
     def onMarkedSeen(
-            self, threads=None, seen_ts=None, ts=None, metadata=None, msg=None
+        self, threads=None, seen_ts=None, ts=None, metadata=None, msg=None
     ):
         """Called when the client is listening, and the client has successfully marked threads as seen.
 
@@ -3271,13 +3272,13 @@ class Client(object):
         )
 
     def onMessageUnsent(
-            self,
-            mid=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and someone unsends (deletes for everyone) a message.
 
@@ -3296,13 +3297,13 @@ class Client(object):
         )
 
     def onPeopleAdded(
-            self,
-            mid=None,
-            added_ids=None,
-            author_id=None,
-            thread_id=None,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        added_ids=None,
+        author_id=None,
+        thread_id=None,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody adds people to a group thread.
 
@@ -3319,13 +3320,13 @@ class Client(object):
         )
 
     def onPersonRemoved(
-            self,
-            mid=None,
-            removed_id=None,
-            author_id=None,
-            thread_id=None,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        removed_id=None,
+        author_id=None,
+        thread_id=None,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody removes a person from a group thread.
 
@@ -3373,7 +3374,7 @@ class Client(object):
         log.info("Inbox event: {}, {}, {}".format(unseen, unread, recent_unread))
 
     def onTyping(
-            self, author_id=None, status=None, thread_id=None, thread_type=None, msg=None
+        self, author_id=None, status=None, thread_id=None, thread_type=None, msg=None
     ):
         """Called when the client is listening, and somebody starts or stops typing into a chat.
 
@@ -3387,18 +3388,18 @@ class Client(object):
         pass
 
     def onGamePlayed(
-            self,
-            mid=None,
-            author_id=None,
-            game_id=None,
-            game_name=None,
-            score=None,
-            leaderboard=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        game_id=None,
+        game_name=None,
+        score=None,
+        leaderboard=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody plays a game.
 
@@ -3422,21 +3423,20 @@ class Client(object):
         )
 
     def onReactionAdded(
-            self,
-            mid=None,
-            reaction=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        reaction=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody reacts to a message.
 
         Args:
             mid: Message ID, that user reacted to
             reaction (MessageReaction): Reaction
-            add_reaction: Whether user added or removed reaction
             author_id: The ID of the person who reacted to the message
             thread_id: Thread ID that the action was sent to. See :ref:`intro_threads`
             thread_type (ThreadType): Type of thread that the action was sent to. See :ref:`intro_threads`
@@ -3450,13 +3450,13 @@ class Client(object):
         )
 
     def onReactionRemoved(
-            self,
-            mid=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody removes reaction from a message.
 
@@ -3475,7 +3475,7 @@ class Client(object):
         )
 
     def onBlock(
-            self, author_id=None, thread_id=None, thread_type=None, ts=None, msg=None
+        self, author_id=None, thread_id=None, thread_type=None, ts=None, msg=None
     ):
         """Called when the client is listening, and somebody blocks client.
 
@@ -3491,7 +3491,7 @@ class Client(object):
         )
 
     def onUnblock(
-            self, author_id=None, thread_id=None, thread_type=None, ts=None, msg=None
+        self, author_id=None, thread_id=None, thread_type=None, ts=None, msg=None
     ):
         """Called when the client is listening, and somebody blocks client.
 
@@ -3507,14 +3507,14 @@ class Client(object):
         )
 
     def onLiveLocation(
-            self,
-            mid=None,
-            location=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            msg=None,
+        self,
+        mid=None,
+        location=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        msg=None,
     ):
         """Called when the client is listening and somebody sends live location info.
 
@@ -3534,15 +3534,15 @@ class Client(object):
         )
 
     def onCallStarted(
-            self,
-            mid=None,
-            caller_id=None,
-            is_video_call=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        caller_id=None,
+        is_video_call=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody starts a call in a group.
 
@@ -3564,16 +3564,16 @@ class Client(object):
         )
 
     def onCallEnded(
-            self,
-            mid=None,
-            caller_id=None,
-            is_video_call=None,
-            call_duration=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        caller_id=None,
+        is_video_call=None,
+        call_duration=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody ends a call in a group.
 
@@ -3596,15 +3596,15 @@ class Client(object):
         )
 
     def onUserJoinedCall(
-            self,
-            mid=None,
-            joined_id=None,
-            is_video_call=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        joined_id=None,
+        is_video_call=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody joins a group call.
 
@@ -3623,15 +3623,15 @@ class Client(object):
         )
 
     def onPollCreated(
-            self,
-            mid=None,
-            poll=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        poll=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody creates a group poll.
 
@@ -3652,17 +3652,17 @@ class Client(object):
         )
 
     def onPollVoted(
-            self,
-            mid=None,
-            poll=None,
-            added_options=None,
-            removed_options=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        poll=None,
+        added_options=None,
+        removed_options=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody votes in a group poll.
 
@@ -3683,15 +3683,15 @@ class Client(object):
         )
 
     def onPlanCreated(
-            self,
-            mid=None,
-            plan=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        plan=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody creates a plan.
 
@@ -3712,14 +3712,14 @@ class Client(object):
         )
 
     def onPlanEnded(
-            self,
-            mid=None,
-            plan=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        plan=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and a plan ends.
 
@@ -3737,15 +3737,15 @@ class Client(object):
         )
 
     def onPlanEdited(
-            self,
-            mid=None,
-            plan=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        plan=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody edits a plan.
 
@@ -3766,15 +3766,15 @@ class Client(object):
         )
 
     def onPlanDeleted(
-            self,
-            mid=None,
-            plan=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        plan=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody deletes a plan.
 
@@ -3795,16 +3795,16 @@ class Client(object):
         )
 
     def onPlanParticipation(
-            self,
-            mid=None,
-            plan=None,
-            take_part=None,
-            author_id=None,
-            thread_id=None,
-            thread_type=None,
-            ts=None,
-            metadata=None,
-            msg=None,
+        self,
+        mid=None,
+        plan=None,
+        take_part=None,
+        author_id=None,
+        thread_id=None,
+        thread_type=None,
+        ts=None,
+        metadata=None,
+        msg=None,
     ):
         """Called when the client is listening, and somebody takes part in a plan or not.
 
