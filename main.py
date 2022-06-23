@@ -31,7 +31,6 @@ load_dotenv()
 
 EMAIL = os.environ['EMAIL']
 PASS = os.environ['PASS']
-FB_SESSION_COOKIES = json.loads(os.environ['FB_SESSION_COOKIES'])
 REDDIT_CLIENT_ID = os.environ['REDDIT_CLIENT_ID']
 REDDIT_CLIENT_SECRET = os.environ['REDDIT_CLIENT_SECRET']
 REDDIT_USERNAME = os.environ['REDDIT_USERNAME']
