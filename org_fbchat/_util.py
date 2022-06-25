@@ -44,7 +44,8 @@ log.addHandler(handler)
 
 #: Default list of user agents
 # Changing to this user-agent solved login issue for some people.
-USER_AGENTS = ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"]
+USER_AGENTS = [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"]
 
 
 def now():
@@ -59,7 +60,7 @@ def json_minimal(data):
 def strip_json_cruft(text):
     """Removes `for(;;);` (and other cruft) that preceeds JSON responses."""
     try:
-        return text[text.index("{") :]
+        return text[text.index("{"):]
     except ValueError:
         raise FBchatException("No JSON object found: {!r}".format(text))
 
@@ -171,7 +172,7 @@ def check_http_code(code):
     if code == 404:
         raise FBchatFacebookError(
             msg + " This is either because you specified an invalid URL, or because"
-            " you provided an invalid id (Facebook usually requires integer ids).",
+                  " you provided an invalid id (Facebook usually requires integer ids).",
             request_status_code=code,
         )
     if 400 <= code < 600:

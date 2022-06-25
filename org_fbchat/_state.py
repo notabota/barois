@@ -129,10 +129,11 @@ class State(object):
 
     @classmethod
     def login(cls, email, password, on_2fa_callback, user_agent=_util.USER_AGENTS):
-        session = session_factory(user_agent=user_agent)
+        session = session_factory(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.44")
 
-        soup = find_input_fields(session.get("https://m.facebook.com/").text)
-        
+        soup = find_input_fields(session.get("https://m.facebook.com/login/").text)
+
         soup = soup.find_all("input")
 
         data = dict(
@@ -141,16 +142,15 @@ class State(object):
             if elem.has_attr("value") and elem.has_attr("name")
         )
 
-        data["email"] = email
-        data["pass"] = password
-        data["login"] = "Log In"
+        data["email"] = "basicallyarois@gmail.com"
+        data["pass"] = "B4rois"
 
-        # pprint(data)
-        r = session.post("https://m.facebook.com/login/device-based/regular/login/?refsrc=deprecated&lwv=100&refid=8", data=data)
+        pprint(data)
+        r = session.post("https://m.facebook.com/login/", data=data)
 
-        # print(r.status_code)
-        # print(r.url)
-        # print(r.content)
+        print(r.status_code)
+        print(r.url)
+        print(r.content)
 
         # Usually, 'Checkpoint' will refer to 2FA
         if "checkpoint" in r.url and ('id="approvals_code"' in r.text.lower()):
@@ -161,9 +161,12 @@ class State(object):
         if "save-device" in r.url:
             r = session.get("https://m.facebook.com/login/save-device/cancel/")
 
-        # Sometimes facebook redirects to facebook.com/cookie/consent-page/*[...more directories]. So, go to homepage 
+        # Sometimes facebook redirects to facebook.com/cookie/consent-page/*[...more directories]. So, go to homepage
         if "cookie" in r.url:
             r = session.get("https://m.facebook.com/", allow_redirects=False)
+
+        print(r.url)
+        print(is_home(r.url))
 
         if is_home(r.url):
             return cls.from_session(session=session)
@@ -193,12 +196,13 @@ class State(object):
     def from_session(cls, session):
         # TODO: Automatically set user_id when the cookie changes in the session
         user_id = get_user_id(session)
+        print(user_id)
 
         r = session.get(_util.prefix_url("/"))
         soup = find_input_fields(r.text)
 
         fb_dtsg = ''
-        
+
         if fb_dtsg == None or fb_dtsg == "":
             FB_DTSG_REGEX = re.compile(r'"[a-zA-Z0-9-_:]+:+[a-zA-Z0-9-_:]*"')
             fb_dtsg = FB_DTSG_REGEX.search(r.text).group(0)
@@ -206,7 +210,6 @@ class State(object):
             fb_dtsg = fb_dtsg.replace("'", '')
             # print("\n\n[latest] fb_dtsg:\n")
             # print(fb_dtsg)
-        
 
         if fb_dtsg == None or fb_dtsg == "":
             fb_dtsg_element = soup.find("input", {"name": "fb_dtsg"})
@@ -226,8 +229,7 @@ class State(object):
                 # print(fb_dtsg)
             except:
                 pass
-            
-            
+
         if fb_dtsg == None or fb_dtsg == "":
             FB_DTSG_REGEX = re.compile(r'"[a-zA-Z0-9_.-]*:[a-zA-Z0-9_.-]*"\)')
             fb_dtsg = FB_DTSG_REGEX.search(r.text).group(0)
@@ -235,12 +237,12 @@ class State(object):
             fb_dtsg = fb_dtsg.replace('"', '')
             # print("\n\n[3]fb_dtsg_element:\n")
             # print(fb_dtsg)
-        
+
         revision = int(r.text.split('"client_revision":')[1].split(",", 1)[0])
 
         logout_h_element = soup.find("input", {"name": "h"})
         logout_h = logout_h_element["value"] if logout_h_element else None
-        
+
         print(user_id, fb_dtsg, revision, logout_h)
 
         return cls(

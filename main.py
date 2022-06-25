@@ -343,7 +343,8 @@ class BAROIS(fbchat.Client):
 
 
 client = BAROIS(EMAIL, PASS,
-                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36")
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.44",
+                max_tries=1)
 client.listen()
 
 # client = fbchat.Client(EMAIL, PASS,

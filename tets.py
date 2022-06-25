@@ -1,62 +1,74 @@
-from __future__ import print_function
+from pprint import pprint
 
-import datetime
-import os.path
-
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-
-# If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/calendar.events',
-          'https://www.googleapis.com/auth/calendar']
+import bs4
+import requests
+from org_fbchat import _util
 
 
-def main():
-    """Shows basic usage of the Google Calendar API.
-    Prints the start and name of the next 10 events on the user's calendar.
-    """
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'client_secret_757249550479-057dbi6c1544ga1f7ph353omcdt09t8f.apps.googleusercontent.com.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-
-    service = build("calendar", "v3", credentials=creds)
-    calendarId = "primary"
-    event = {
-        "start": {
-            "dateTime": "2022-01-01T00:00:00.000+07:00",
-        },
-        "end": {
-            "dateTime": "2022-01-01T00:30:00.000+07:00",
-            'timeZone': 'Asia/Ho_Chi_Minh',
-        },
-        # "attendees": [{"email": "basicallyarois@gmail.com"}],
-        "conferenceData": {
-            "createRequest": {"requestId": "sample123", "conferenceSolutionKey": {"type": "hangoutsMeet"}}},
-        "summary": "Meet Event",
-        "description": "Description"
-    }
-    res = service.events().insert(calendarId=calendarId, sendNotifications=True, body=event,
-                                  conferenceDataVersion=1).execute()
-
-    print(res)
+def is_home(url):
+    parts = _util.urlparse(url)
+    # Check the urls `/home.php` and `/`
+    return "home" in parts.path or "/" == parts.path
 
 
-if __name__ == '__main__':
-    main()
+def session_factory(user_agent=None):
+    session = requests.Session()
+    # session.headers["Referer"] = "https://www.facebook.com"
+    # session.headers["Accept"] = "text/html"
+
+    # TODO: Deprecate setting the user agent manually
+    # session.headers["User-Agent"] = user_agent
+    print(session.headers)
+    print(session.cookies)
+    return session
+
+
+def find_input_fields(html):
+    # return bs4.BeautifulSoup(html, "html.parser", parse_only=bs4.SoupStrainer("input"))
+    return bs4.BeautifulSoup(html, "html.parser")
+
+
+session = session_factory(
+    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.44")
+
+soup = find_input_fields(session.get("https://m.facebook.com/login").text)
+
+print(soup.contents)
+
+soup = soup.find_all("input")
+
+data = dict(
+    (elem["name"], elem["value"])
+    for elem in soup
+    if elem.has_attr("value") and elem.has_attr("name")
+)
+
+data["email"] = "basicallyarois@gmail.com"
+data["pass"] = "B4rois"
+data["login"] = "Log In"
+
+pprint(data)
+pprint(session.headers)
+pprint(session.cookies)
+
+r = session.post("https://m.facebook.com/login/", data=data)
+
+print(r.status_code)
+print(r.url)
+print(r.content)
+
+# # Usually, 'Checkpoint' will refer to 2FA
+# if "checkpoint" in r.url and ('id="approvals_code"' in r.text.lower()):
+#     code = on_2fa_callback()
+#     r = _2fa_helper(session, code, r)
+
+# Sometimes Facebook tries to show the user a "Save Device" dialog
+if "save-device" in r.url:
+    r = session.get("https://m.facebook.com/login/save-device/cancel/")
+
+# Sometimes facebook redirects to facebook.com/cookie/consent-page/*[...more directories]. So, go to homepage
+if "cookie" in r.url:
+    r = session.get("https://m.facebook.com/", allow_redirects=False)
+
+print(r.url)
+print(is_home(r.url))
